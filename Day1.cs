@@ -2,6 +2,9 @@
 {
     public static void Day1()
     {
+        var day = MethodBase.GetCurrentMethod()!.Name;
+        Console.WriteLine(day);
+
         ComputeExample(); Compute();
 
         void ComputeExample()
@@ -30,7 +33,7 @@
 
         void Compute()
         {
-            var input = File.ReadAllLines("day1.txt");
+            var input = File.ReadAllLines($"{day.ToLowerInvariant()}.txt");
             Part1(input).Should().Be(55208);
             Part2(input).Should().Be(54578);
         }
