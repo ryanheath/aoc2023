@@ -81,12 +81,12 @@ zoneight234
 
     static int CalibrationRegex(string line)
     {
-        var regexpr = "one|two|three|four|five|six|seven|eight|nine";
-        var fsv = new Regex("[1-9]|" + regexpr);
-        var lsv = new Regex("[1-9]|" + regexpr.ReverseString());
+        var regexpr = "[1-9]|one|two|three|four|five|six|seven|eight|nine";
+        var fsv = new Regex(regexpr);
+        var lsv = new Regex(regexpr, RegexOptions.RightToLeft);
         return 
             ToDigit(fsv.Match(line).Value) * 10 + 
-            ToDigit(lsv.Match(line.ReverseString()).Value.ReverseString());
+            ToDigit(lsv.Match(line).Value);
 
         static int ToDigit(string value) => value switch
         {
