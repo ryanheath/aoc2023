@@ -21,7 +21,6 @@ static partial class Aoc2023
                 Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green
                 """.ToLines();
             Part1(input, new (12, 13, 14)).Should().Be(8);
-
             Part2(input).Should().Be(2286);
         }
 
@@ -38,17 +37,10 @@ static partial class Aoc2023
                 .Where(IsFittingGame)
                 .Sum(x => x.Id);
 
-            bool IsFittingGame(Game game)
-            {
-                foreach (var round in game.Rounds)
-                {
-                    if (round.Reds > set.Reds) return false;
-                    if (round.Greens > set.Greens) return false;
-                    if (round.Blues > set.Blues) return false;
-                }
-
-                return true;
-            }
+            bool IsFittingGame(Game game) => game.Rounds.All(x => 
+                x.Reds <= set.Reds && 
+                x.Greens <= set.Greens && 
+                x.Blues <= set.Blues);
         }
 
         int Part2(string[] lines)
@@ -78,46 +70,34 @@ static partial class Aoc2023
 
         static IEnumerable<Game> ParseGames(string[] lines)
         {
-            foreach (var line in lines)
-            {
-                yield return ParseGame(line);
-            }
+            return lines.Select(ParseGame);
 
             static Game ParseGame(string line)
             {
                 var gameSplit = line.IndexOf(": ");
                 var id = line[5..gameSplit].ToInt();
                 var rounds = line[(gameSplit + 2)..].Split("; ");
-                var sets = new List<Set>();
 
-                foreach (var round in rounds)
+                return new Game(id, rounds.Select(ParseSet).ToArray());
+
+                static Set ParseSet(string round) => round.Split(", ").Aggregate(new Set(), AddCube);
+
+                static Set AddCube(Set set, string cube)
                 {
-                    sets.Add(ParseSet(round));
+                    var cubeSplit = cube.IndexOf(' ');
+                    var count = cube[..cubeSplit].ToInt();
+                    var color = cube[(cubeSplit + 1)..];
+
+                    return SetColor(set, color, count);
                 }
 
-                return new Game(id, sets.ToArray());
-
-                static Set ParseSet(string round)
+                static Set SetColor(Set set, string color, int count) => color switch
                 {
-                    var set = new Set();
-
-                    var cubes = round.Split(", ");
-
-                    foreach (var cube in cubes)
-                    {
-                        var cubeSplit = cube.IndexOf(" ");
-                        var count = cube[..cubeSplit].ToInt();
-                        var color = cube[(cubeSplit + 1)..];
-                        switch (color)
-                        {
-                            case "red": set = set with { Reds = count }; break;
-                            case "green": set = set with { Greens = count }; break;
-                            case "blue": set = set with { Blues = count }; break;
-                        }
-                    }
-
-                    return set;
-                }
+                    "red" => set with { Reds = count },
+                    "green" => set with { Greens = count },
+                    "blue" => set with { Blues = count },
+                    _ => throw new UnreachableException(),
+                };
             }
         }
     }
