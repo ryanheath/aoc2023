@@ -39,9 +39,32 @@
 
         IEnumerable<int> ParsePartNumbers(string[] lines)
         {
-            var symbolsRegex = new Regex(@"[^\.0-9]");
+            var parts = new Dictionary<(int, int), int>();
 
-            var parts = new HashSet<(int, int, int partNumber)>();
+            foreach (var (_, digitPos, partNumber) in FindPartPositions(lines, @"[^\.0-9]"))
+                parts[digitPos] = partNumber;
+
+            return parts.Values;
+        }
+
+        IEnumerable<int> ParseGearRatios(string[] lines)
+        {
+            var gears = new Dictionary<(int, int), HashSet<((int, int), int partNumber)>>();
+
+            foreach (var (symbolPos, digitPos, partNumber) in FindPartPositions(lines, @"\*"))
+            {
+                gears.TryAdd(symbolPos, []);
+                gears[symbolPos].Add((digitPos, partNumber));
+            }
+
+            return gears
+                    .Where(kv => kv.Value.Count == 2)
+                    .Select(kv => kv.Value.First().partNumber * kv.Value.Last().partNumber);
+        }
+
+        static IEnumerable<((int, int) symbolPos, (int, int) digitPos, int partNumber)> FindPartPositions(string[] lines, string regEx)
+        {
+            var symbolsRegex = new Regex(regEx);
 
             for (var i = 0; i < lines.Length; i++)
             foreach (Match m in symbolsRegex.Matches(lines[i]))
@@ -55,65 +78,25 @@
 
                 if (y < 0 || y >= lines.Length || x < 0 || x >= lines[y].Length) continue;
 
-                if (char.IsDigit(lines[y][x])) RegisterPartAt(y, x);
-            }
-
-            return parts.Select(p => p.partNumber);
-
-            void RegisterPartAt(int y, int x)
-            {
-                var line = lines[y];
-
-                var startX = x;
-                while (startX > 0 && char.IsDigit(line[startX-1])) startX--;
-
-                var endX = x;
-                while (endX < line.Length-1 && char.IsDigit(line[endX+1])) endX++;
-
-                var partNumber = line[startX..(endX+1)].ToInt();
-
-                parts.Add((y, startX, partNumber));
+                if (char.IsDigit(lines[y][x]))
+                {
+                    var (digitX, partNumber) = ParsePartNumber(x, lines[y]);
+                    yield return ((i, m.Index), (y, digitX), partNumber);
+                }
             }
         }
 
-        IEnumerable<int> ParseGearRatios(string[] lines)
+        static (int digitX, int partNumber) ParsePartNumber(int x, string line)
         {
-            var gearRegex = new Regex(@"\*");
+            var startX = x;
+            while (startX > 0 && char.IsDigit(line[startX-1])) startX--;
 
-            var gears = new Dictionary<(int, int), HashSet<(int, int, int partNumber)>>();
+            var endX = x;
+            while (endX < line.Length-1 && char.IsDigit(line[endX+1])) endX++;
 
-            for (var i = 0; i < lines.Length; i++)
-            foreach (Match m in gearRegex.Matches(lines[i]))
-            for (var dy = -1; dy <= 1; dy++)
-            for (var dx = -1; dx <= 1; dx++)
-            {
-                if (dx == 0 && dy == 0) continue;
+            var partNumber = line[startX..(endX+1)].ToInt();
 
-                var x = m.Index + dx;
-                var y = i + dy;
-
-                if (y < 0 || y >= lines.Length || x < 0 || x >= lines[y].Length) continue;
-
-                if (char.IsDigit(lines[y][x])) RegisterPartAt(i, m.Index, y, x);
-            }
-
-            return gears.Where(kv => kv.Value.Count == 2).Select(kv => kv.Value.First().partNumber * kv.Value.Last().partNumber);
-
-            void RegisterPartAt(int i, int j, int y, int x)
-            {
-                var line = lines[y];
-
-                var startX = x;
-                while (startX > 0 && char.IsDigit(line[startX-1])) startX--;
-
-                var endX = x;
-                while (endX < line.Length-1 && char.IsDigit(line[endX+1])) endX++;
-
-                var partNumber = line[startX..(endX+1)].ToInt();
-
-                gears.TryAdd((i, j), []);
-                gears[(i, j)].Add((y, startX, partNumber));
-            }
+            return (startX, partNumber);
         }
     }
 }
