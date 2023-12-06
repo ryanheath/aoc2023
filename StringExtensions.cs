@@ -59,6 +59,11 @@ static class StringExtensions
         return int.Parse(input);
     }
 
+    static public long ToLong(this string input)
+    {
+        return long.Parse(input);
+    }
+
     static public string ToBits(this int input)
     {
         return Convert.ToString(input, 2);
