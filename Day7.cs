@@ -51,15 +51,10 @@
         {
             var jokers = hand.Count(x => x == 'J');
             if (jokers == 0) return HandType(hand);
-
-            if (jokers == 5)
-            {
-                return [('J', 5)];
-            }
-
+            if (jokers == 5) return [('J', 5)];
+            
             var groups = HandType(hand.Replace("J", ""));
-            groups[0] = (groups[0].card, groups[0].count + hand.Count(x => x == 'J'));
-
+            groups[0] = (groups[0].card, groups[0].count + jokers);
             return groups;
         }
     }
