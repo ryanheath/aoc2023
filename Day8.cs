@@ -52,50 +52,36 @@ static partial class Aoc2023
         {
             var input = File.ReadAllLines($"{day.ToLowerInvariant()}.txt");
             Part1(input).Should().Be(13019);
-            Part2(input).Should().Be(0);
+            Part2(input).Should().Be(13524038372771L);
         }
 
-        int Part1(string[] lines)
+        long Part1(string[] lines) => Walk(ParseMap(lines), "AAA");
+
+        long Part2(string[] lines)
         {
-            var (instructions, network) = ParseMap(lines);
+            var map = ParseMap(lines);
 
-            var steps = 0;
+            var startingNodes = map.network.Keys.Where(k => k[^1] == 'A');
+            var steps = startingNodes.Select(n => Walk(map, n));
 
-            var current = "AAA";
+            return steps.Lcm();
+        }
 
-            while (current != "ZZZ")
+        static long Walk((int[] instructions, Dictionary<string, string[]> network) map, string node)
+        {
+            var (instructions, network) = map;
+            var steps = 0L;
+
+            while (node[^1] != 'Z')
             {
-                current = network[current][instructions[steps % instructions.Length]];
+                node = network[node][instructions[steps % instructions.Length]];
                 steps++;
             }
 
             return steps;
         }
 
-        long Part2(string[] lines)
-        {
-            var (instructions, network) = ParseMap(lines);
-
-            var nodes = network.Keys.Where(k => k[^1] == 'A').ToArray();
-            var steps = nodes.Select(Walk).ToArray();
-
-            return steps.Aggregate(Lcm);
-
-            long Walk(string node)
-            {
-                var steps = 0L;
-
-                while (node[^1] != 'Z')
-                {
-                    node = network[node][instructions[steps % instructions.Length]];
-                    steps++;
-                }
-
-                return steps;
-            }
-        }
-
-        (int[] instructions, Dictionary<string, string[]> network) ParseMap(string[] lines)
+        static (int[] instructions, Dictionary<string, string[]> network) ParseMap(string[] lines)
         {
             var instructions = lines[0].Select(c => c == 'L' ? 0 : 1).ToArray();
 
@@ -112,22 +98,5 @@ static partial class Aoc2023
 
             return (instructions, network);
         }
-    }
-
-    private static long Lcm(long a, long b)
-    {
-        return b / Gcd(a, b) * a;
-    }
-
-    private static long Gcd(long a, long b)
-    {
-        while (b != 0)
-        {
-            var t = b;
-            b = a % b;
-            a = t;
-        }
-
-        return a;
     }
 }
