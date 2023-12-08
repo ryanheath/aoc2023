@@ -78,7 +78,7 @@ static partial class Aoc2023
                 var id = line[5..gameSplit].ToInt();
                 var rounds = line[(gameSplit + 2)..].Split("; ");
 
-                return new Game(id, rounds.Select(ParseSet).ToArray());
+                return new Game(id, [..rounds.Select(ParseSet)]);
 
                 static Set ParseSet(string round) => round.Split(", ").Aggregate(new Set(), AddCube);
 

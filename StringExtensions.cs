@@ -20,59 +20,28 @@ static class StringExtensions
         yield return group;
     }
 
-    static public string[] ToLines(this string input)
-    {
-        return input.Split("\r\n");
-    }
+    static public string[] ToLines(this string input) => input.Split("\r\n");
 
-    static public int[] ToInts(this string input)
-    {
-        return input.ToInts("\r\n");
-    }
+    static public int[] ToInts(this string input) => input.ToInts("\r\n");
 
-    static public int[] ToInts(this string input, string splitter)
-    {
-        return input.Split(splitter, StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToArray();
-    }
+    static public int[] ToInts(this string input, string splitter) => [.. input.Split(splitter, StringSplitOptions.RemoveEmptyEntries).Select(int.Parse)];
 
-    static public long[] ToLongs(this string input, string splitter)
-    {
-        return input.Split(splitter, StringSplitOptions.RemoveEmptyEntries).Select(long.Parse).ToArray();
-    }
-    static public ulong[] ToULongs(this string input, string splitter)
-    {
-        return input.Split(splitter, StringSplitOptions.RemoveEmptyEntries).Select(ulong.Parse).ToArray();
-    }
+    static public long[] ToLongs(this string input, string splitter) 
+        => [.. input.Split(splitter, StringSplitOptions.RemoveEmptyEntries).Select(long.Parse)];
+    static public ulong[] ToULongs(this string input, string splitter) 
+        => [.. input.Split(splitter, StringSplitOptions.RemoveEmptyEntries).Select(ulong.Parse)];
 
-    static public int[] ToInts(this string[] input)
-    {
-        return input.Select(int.Parse).ToArray();
-    }
+    static public int[] ToInts(this string[] input) => [.. input.Select(int.Parse)];
 
-    static public string Sort(this string input)
-    {
-        return string.Concat(input.OrderBy(c => c));
-    }
+    static public string Sort(this string input) => string.Concat(input.OrderBy(c => c));
 
-    static public int ToInt(this string input)
-    {
-        return int.Parse(input);
-    }
+    static public int ToInt(this string input) => int.Parse(input);
 
-    static public long ToLong(this string input)
-    {
-        return long.Parse(input);
-    }
+    static public long ToLong(this string input) => long.Parse(input);
 
-    static public string ToBits(this int input)
-    {
-        return Convert.ToString(input, 2);
-    }
+    static public string ToBits(this int input) => Convert.ToString(input, 2);
 
-    static public string ToBits(this byte input)
-    {
-        return Convert.ToString(input, 2);
-    }
+    static public string ToBits(this byte input) => Convert.ToString(input, 2);
 
     static public int IntFromBits(this string input) => input.AsSpan().IntFromBits();
 
@@ -91,5 +60,5 @@ static class StringExtensions
         return v;
     }
 
-    public static string ReverseString(this string s) => new(s.Reverse().ToArray());
+    public static string ReverseString(this string s) => new([..s.Reverse()]);
 }

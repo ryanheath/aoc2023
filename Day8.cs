@@ -83,17 +83,14 @@ static partial class Aoc2023
 
         static (int[] instructions, Dictionary<string, string[]> network) ParseMap(string[] lines)
         {
-            var instructions = lines[0].Select(c => c == 'L' ? 0 : 1).ToArray();
+            int[] instructions = [..lines[0].Select(c => c == 'L' ? 0 : 1)];
 
             var network = new Dictionary<string, string[]>();
 
             for (var i = 2; i < lines.Length; i++)
             {
-                var line = lines[i];
-                var parts = line.Split(" = ");
-                var name = parts[0];
-                var nodes = parts[1].Trim('(', ')').Split(", ");
-                network[name] = nodes;
+                var parts = lines[i].Split(" = ");
+                network[parts[0]] = parts[1].Trim('(', ')').Split(", ");
             }
 
             return (instructions, network);
