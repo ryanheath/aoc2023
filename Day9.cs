@@ -30,13 +30,13 @@
 
         int Part2(string[] lines) => lines.ToInts(" ").Select(PredictBackwards).Sum();;
 
-        int Predict(int[] n)
+        static int Predict(int[] n)
         {
             int[] diffs = [..Differences(n)];
             return diffs.All(d => d == 0) ? n[^1] : n[^1] + Predict(diffs);
         }
 
-        int PredictBackwards(int[] n)
+        static int PredictBackwards(int[] n)
         {
             int[] diffs = [..Differences(n)];
             return diffs.All(d => d == 0) ? n[0] : n[0] - PredictBackwards(diffs);
