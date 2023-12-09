@@ -42,12 +42,6 @@
             return diffs.All(d => d == 0) ? n[0] : n[0] - PredictBackwards(diffs);
         }
 
-        static IEnumerable<int> Differences(int[] n)
-        {
-            for (var i = 1; i < n.Length; i++)
-            {
-                yield return n[i] - n[i - 1];
-            }
-        }
+        static IEnumerable<int> Differences(int[] n) => n.Zip(n.Skip(1), (l, r) => r - l);
     }
 }
