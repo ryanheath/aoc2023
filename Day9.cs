@@ -33,13 +33,13 @@
         static int Predict(int[] n)
         {
             var diffs = Differences(n);
-            return diffs.All(d => d == 0) ? n[^1] : n[^1] + Predict(diffs);
+            return !diffs.Any() ? 0 : n[^1] + Predict(diffs);
         }
 
         static int PredictBackwards(int[] n)
         {
             var diffs = Differences(n);
-            return diffs.All(d => d == 0) ? n[0] : n[0] - PredictBackwards(diffs);
+            return !diffs.Any() ? 0 : n[0] - PredictBackwards(diffs);
         }
 
         static int[] Differences(int[] n) => [..n.Zip(n.Skip(1), (l, r) => r - l)];
