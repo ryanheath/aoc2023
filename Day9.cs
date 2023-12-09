@@ -28,19 +28,15 @@
 
         int Part1(string[] lines) => lines.ToInts(" ").Select(Predict).Sum();
 
-        int Part2(string[] lines) => lines.ToInts(" ").Select(PredictBackwards).Sum();;
+        int Part2(string[] lines) => lines.ToInts(" ").Select(PredictBackwards).Sum();
 
         static int Predict(int[] n)
         {
             var diffs = Differences(n);
-            return !diffs.Any() ? 0 : n[^1] + Predict(diffs);
+            return n[^1] + (diffs.All(x => x == 0) ? 0 : Predict(diffs));
         }
 
-        static int PredictBackwards(int[] n)
-        {
-            var diffs = Differences(n);
-            return !diffs.Any() ? 0 : n[0] - PredictBackwards(diffs);
-        }
+        static int PredictBackwards(int[] n) => Predict([.. n.Reverse()]);
 
         static int[] Differences(int[] n) => [..n.Zip(n.Skip(1), (l, r) => r - l)];
     }
