@@ -26,6 +26,8 @@ static class StringExtensions
 
     static public int[] ToInts(this string input, string splitter) => [.. input.Split(splitter, StringSplitOptions.RemoveEmptyEntries).Select(int.Parse)];
 
+    static public IEnumerable<int[]> ToInts(this string[] lines, string splitter) => lines.Select(line => line.ToInts(splitter));
+
     static public long[] ToLongs(this string input, string splitter) 
         => [.. input.Split(splitter, StringSplitOptions.RemoveEmptyEntries).Select(long.Parse)];
     static public ulong[] ToULongs(this string input, string splitter) 
