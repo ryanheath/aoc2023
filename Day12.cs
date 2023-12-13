@@ -19,26 +19,21 @@
                 ?###???????? 3,2,1
                 """.ToLines();
             Part1(input).Should().Be(21);
-
-            input = 
-                """
-                abc
-                """.ToLines();
-            Part2(input).Should().Be(0);
+            Part2(input).Should().Be(525152);
         }
 
         void Compute()
         {
             var input = File.ReadAllLines($"{day.ToLowerInvariant()}.txt");
             Part1(input).Should().Be(6935);
-            Part2(input).Should().Be(0);
+            Part2(input).Should().Be(3920437278260);
         }
 
-        int Part1(string[] lines) => lines.Select(ParseSpring).Select(CountArrangements).Sum();
+        decimal Part1(string[] lines) => lines.Select(ParseSpring).Select(CountArrangements).Sum();
 
-        int Part2(string[] lines) => 0;
+        decimal Part2(string[] lines) => lines.Select(ParseSpring).Select(Unfold).Select(CountArrangements).Sum();
 
-        (char[], int[]) ParseSpring(string line)
+        static (char[], int[]) ParseSpring(string line)
         {
             var parts = line.Split(" ");
             var conditions = parts[0].ToCharArray();
@@ -46,14 +41,22 @@
             return (conditions, broken);
         }
 
-        int CountArrangements((char[], int[]) spring)
+        static (char[], int[]) Unfold((char[], int[]) spring)
         {
-            var countArrangements = 0;
+            var (conditions, broken) = spring;
+            char[] unfoldedConditions = [..conditions, '?', ..conditions, '?', ..conditions, '?', ..conditions, '?', ..conditions];
+            int[] unfoldedBroken = [..broken, ..broken, ..broken, ..broken, ..broken];
+            return (unfoldedConditions, unfoldedBroken);
+        }
+
+        static decimal CountArrangements((char[], int[]) spring)
+        {
+            var countArrangements = 0m;
             var (conditions, broken) = spring;
             
             var possibleOffsets = conditions.Select((c, i) => (c, i)).Where(x => x.c != '.').Select(x => x.i).ToList();
 
-            var work = new List<(int brokenIndex, int offset, int count)>();
+            var work = new List<(int brokenIndex, int offset, decimal count)>();
             
             // enqueue all possible offsets for first broken
             EnqueueWork(0, 0, 0, 1);
@@ -95,7 +98,7 @@
 
             return countArrangements;
 
-            void EnqueueWork(int bi, int offsetEnd, int nextPossibleIndex, int count)
+            void EnqueueWork(int bi, int offsetEnd, int nextPossibleIndex, decimal count)
             {
                 for (var i = nextPossibleIndex; i < possibleOffsets.Count; i++)
                 {
