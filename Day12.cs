@@ -29,9 +29,9 @@
             Part2(input).Should().Be(3920437278260);
         }
 
-        decimal Part1(string[] lines) => lines.Select(ParseSpring).Select(CountArrangements).Sum();
+        long Part1(string[] lines) => lines.Select(ParseSpring).Select(CountArrangements).Sum();
 
-        decimal Part2(string[] lines) => lines.Select(ParseSpring).Select(Unfold).Select(CountArrangements).Sum();
+        long Part2(string[] lines) => lines.Select(ParseSpring).Select(Unfold).Select(CountArrangements).Sum();
 
         static (char[], int[]) ParseSpring(string line)
         {
@@ -49,14 +49,14 @@
             return (unfoldedConditions, unfoldedBroken);
         }
 
-        static decimal CountArrangements((char[], int[]) spring)
+        static long CountArrangements((char[], int[]) spring)
         {
-            var countArrangements = 0m;
+            var countArrangements = 0L;
             var (conditions, broken) = spring;
             
             var possibleOffsets = conditions.Select((c, i) => (c, i)).Where(x => x.c != '.').Select(x => x.i).ToList();
 
-            var work = new List<(int brokenIndex, int offset, decimal count)>();
+            var work = new List<(int brokenIndex, int offset, long count)>();
             
             // enqueue all possible offsets for first broken
             EnqueueWork(0, 0, 0, 1);
@@ -98,7 +98,7 @@
 
             return countArrangements;
 
-            void EnqueueWork(int bi, int offsetEnd, int nextPossibleIndex, decimal count)
+            void EnqueueWork(int bi, int offsetEnd, int nextPossibleIndex, long count)
             {
                 for (var i = nextPossibleIndex; i < possibleOffsets.Count; i++)
                 {
