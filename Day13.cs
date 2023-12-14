@@ -38,147 +38,59 @@
             Part2(input).Should().Be(30844);
         }
 
-        int Part1(string[] lines) => ParseMirrors(lines).Select(DetectMirror).Sum();
+        int Part1(string[] lines) => ParseMirrors(lines).Select(x => DetectMirror(x, useSmudge: false)).Sum();
+        int Part2(string[] lines) => ParseMirrors(lines).Select(x => DetectMirror(x, useSmudge: true)).Sum();
 
-        int Part2(string[] lines) => ParseMirrors(lines).Select(DetectSmudgedMirror).Sum();
-
-        static int DetectMirror(string[] mirror)
+        static int DetectMirror(string[] mirror, bool useSmudge)
         {
-            // horizontal mirror?
-            var mid = IsHorizontalMirror(mirror);
+            var mid = IsHorizontalMirror();
             if (mid >= 0) return (mid + 1) * 100;
 
-            mid = IsVerticalMirror(mirror);
-            if (mid >= 0) return mid + 1;
+            return IsVerticalMirror() + 1;
 
-            throw new UnreachableException("no mirror detected");
+            int IsHorizontalMirror() =>
+                ScanMirror(mirror.Length, mirror[0].Length, 
+                    (int i, int i2) => Enumerable.Range(0, mirror[0].Length).Count(x => mirror[i][x] == mirror[i2][x]));
 
-            static int IsHorizontalMirror(string[] mirror)
+            int IsVerticalMirror() => 
+                ScanMirror(mirror[0].Length, mirror.Length, 
+                    (i, i2) => mirror.Count(l => l[i] == l[i2]));
+
+            int ScanMirror(int imax, int dmax, Func<int, int, int> getSameCount)
             {
-                for (var y = 0; y < mirror.Length - 1; y++)
-                    if (IsMirror(y))
-                        return y;
-
+                for (var i = 0; i < imax - 1; i++)
+                    if (IsMirror(i, imax, dmax, getSameCount))
+                        return i;
                 return -1;
-
-                bool IsMirror(int y)
-                {
-                    for (var y2 = y + 1; Enumerable.Range(0, mirror[y].Length).All(x => mirror[y][x] == mirror[y2][x]); y--, y2++)
-                        // reached one of the ends?
-                        if (y == 0 || y2 == mirror.Length - 1)
-                            return true;
-
-                    return false;
-                }
             }
 
-            static int IsVerticalMirror(string[] mirror, bool debug = false)
+            bool IsMirror(int i, int imax, int length, Func<int, int, int> getSameCount)
             {
-                for (var x = 0; x < mirror[0].Length - 1; x++)
-                    if (IsMirror(x))
-                        return x;
+                var smudgedLength = useSmudge ? length - 1 : length;
+                var wasSmudged = false;
 
-                return -1;
-
-                bool IsMirror(int x)
+                for (var i2 = i + 1; ; i--, i2++)
                 {
-                    for (var x2 = x + 1; mirror.All(l => l[x] == l[x2]); x--, x2++)
-                        // reached one of the ends?
-                        if (x == 0 || x2 == mirror[0].Length - 1)
-                            return true;
+                    var sameCount = getSameCount(i, i2);
 
-                    return false;
-                }
-            }
-        }
+                    if (sameCount != length && sameCount != smudgedLength)
+                        break;
 
-        static int DetectSmudgedMirror(string[] mirror)
-        {
-            // horizontal mirror?
-            var mid = IsHorizontalMirror(mirror);
-            if (mid >= 0) return (mid + 1) * 100;
-
-            mid = IsVerticalMirror(mirror);
-            if (mid >= 0) return mid + 1;
-
-            throw new UnreachableException("no mirror detected");
-
-            static int IsHorizontalMirror(string[] mirror)
-            {
-                for (var y = 0; y < mirror.Length - 1; y++)
-                    if (IsMirror(y))
-                        return y;
-
-                return -1;
-
-                bool IsMirror(int y)
-                {
-                    var length = mirror[0].Length;
-                    var smudgedLength = length - 1;
-                    var wasSmudged = false;
-
-                    for (var y2 = y + 1; ; y--, y2++)
+                    if (useSmudge && smudgedLength == sameCount)
                     {
-                        var sameCount = Enumerable.Range(0, mirror[y].Length).Count(x => mirror[y][x] == mirror[y2][x]);
+                        // smudged may be used only once
+                        if (wasSmudged)
+                            return false;
 
-                        if (sameCount != length && sameCount != smudgedLength)
-                            break;
-
-                        if (smudgedLength == sameCount)
-                        {
-                            // smudged may be used only once
-                            if (wasSmudged)
-                                return false;
-
-                            wasSmudged = true;
-                        }
-
-                        // reached one of the ends?
-                        if (y == 0 || y2 == mirror.Length - 1)
-                            return wasSmudged;
+                        wasSmudged = true;
                     }
 
-                    return false;
+                    // reached one of the ends?
+                    if (i == 0 || i2 == imax - 1)
+                        return !useSmudge || wasSmudged;
                 }
-            }
 
-            static int IsVerticalMirror(string[] mirror, bool debug = false)
-            {
-                for (var x = 0; x < mirror[0].Length - 1; x++)
-                    if (IsMirror(x))
-                        return x;
-
-                return -1;
-
-                bool IsMirror(int x)
-                {
-                    var length = mirror.Length;
-                    var smudgedLength = length - 1;
-                    var wasSmudged = false;
-
-                    for (var x2 = x + 1; ; x--, x2++)
-                    {
-                        var sameCount = mirror.Count(l => l[x] == l[x2]);
-
-                        if (sameCount != length && sameCount != smudgedLength)
-                            break;
-
-                        if (smudgedLength == sameCount)
-                        {
-                            // smudged may be used only once
-                            if (wasSmudged)
-                                return false;
-
-                            wasSmudged = true;
-                        }
-
-                        // reached one of the ends?
-                        if (x == 0 || x2 == mirror[0].Length - 1)
-                            return wasSmudged;
-                    }
-
-                    return false;
-                }
+                return false;
             }
         }
 
