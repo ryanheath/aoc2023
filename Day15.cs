@@ -39,24 +39,15 @@
             {
                 var hash = HASH(label);
                 var box = boxes[hash];
+                var pos = box.FindIndex(b => b.label == label);
 
                 if (add)
                 {
                     var newStep = (label, focalLength ?? 0);
-                    var pos = box.FindIndex(b => b.label == label);
-                    if (pos == -1)
-                    {
-                        box.Add(newStep);
-                    }
-                    else
-                    {
-                        box[pos] = newStep;
-                    }
+                    if (pos == -1) box.Add(newStep);
+                    else box[pos] = newStep;
                 }
-                else
-                {
-                    box.RemoveAll(b => b.label == label);
-                }
+                else if (pos != -1) box.RemoveAt(pos);
             }
 
             return boxes.SelectMany((box, i) => box.Select((step, j) => (i + 1) * (j + 1) * step.focalLength)).Sum();
