@@ -38,6 +38,7 @@ static class StringExtensions
     static public string Sort(this string input) => string.Concat(input.OrderBy(c => c));
 
     static public int ToInt(this string input) => int.Parse(input);
+    static public int? ToNullableInt(this string input) => string.IsNullOrEmpty(input) ? null : int.Parse(input);
 
     static public long ToLong(this string input) => long.Parse(input);
 
