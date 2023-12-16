@@ -132,7 +132,6 @@ static partial class Aoc2023
     public static void Day5()
     {
         var day = MethodBase.GetCurrentMethod()!.Name;
-        Console.WriteLine(day);
 
         ComputeExample(); Compute();
 

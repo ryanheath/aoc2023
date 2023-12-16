@@ -3,7 +3,6 @@
     public static void DayTemplate()
     {
         var day = MethodBase.GetCurrentMethod()!.Name;
-        Console.WriteLine(day);
 
         ComputeExample(); Compute();
 

@@ -6,6 +6,11 @@ typeof(Aoc2023).GetMethods(BindingFlags.Static | BindingFlags.Public)
     .OrderByDescending(m => m.Name.Length)
     .ThenByDescending(m => m.Name)
     .ToList()
-    .ForEach(m => m.Invoke(null, null));
+    .ForEach(m => 
+    {
+        Console.Write(m.Name.PadLeft(5));
+        var timer = Stopwatch.StartNew(); m.Invoke(null, null); timer.Stop();
+        Console.WriteLine($" {timer.ElapsedMilliseconds} ms");
+    });
 
 Console.WriteLine("Done!");
