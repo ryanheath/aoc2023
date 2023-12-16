@@ -25,7 +25,6 @@
         }
 
         int Part1(string[] lines) => 0;
-
         int Part2(string[] lines) => 0;
     }
 }
