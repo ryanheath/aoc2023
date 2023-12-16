@@ -30,16 +30,37 @@
         {
             var input = File.ReadAllLines($"{day.ToLowerInvariant()}.txt");
             Part1(input).Should().Be(7884);
-            Part2(input).Should().Be(0);
+            Part2(input).Should().Be(8185);
         }
 
         int Part1(string[] lines) => CountEnergized(TraverseTiles(ParseTiles(lines), lines.Length, lines[0].Length));
-        int Part2(string[] lines) => 0;
+        int Part2(string[] lines) => CountMaxEnergized(ParseTiles(lines), lines.Length, lines[0].Length);
 
-        static Dictionary<(int y, int x), MirrorTile> TraverseTiles(Dictionary<(int y, int x), MirrorTile> tiles, int maxY, int maxX)
+        static int CountMaxEnergized(Dictionary<(int y, int x), MirrorTile> tiles, int maxY, int maxX)
+        {
+            var max = 0;
+            for (var x = 0; x < maxX; x++)
+            {
+                FindMaxEnergized(0, x, Direction.S);
+                FindMaxEnergized(maxY - 1, x, Direction.N);
+            }
+            for (var y = 0; y < maxY; y++)
+            {
+                FindMaxEnergized(y, 0, Direction.E);
+                FindMaxEnergized(y, maxX - 1, Direction.W);
+            }
+            return max;
+
+            void FindMaxEnergized(int y, int x, Direction direction) 
+                => max = Math.Max(max, CountEnergized(TraverseTiles(DeepCopy(tiles), maxY, maxX, y, x, direction)));
+        }
+
+        static Dictionary<(int y, int x), MirrorTile> TraverseTiles(Dictionary<(int y, int x), MirrorTile> tiles, 
+            int maxY, int maxX,
+            int startY = 0, int startX = 0, Direction startDirection = Direction.E)
         {
             var beams = new Queue<(int y, int x, Direction direction)>();
-            beams.Enqueue((0, 0, Direction.E));
+            beams.Enqueue((startY, startX, startDirection));
 
             while (beams.Count > 0)
             {
@@ -140,6 +161,14 @@
                 for (var x = 0; x < lines[y].Length; x++)
                     if (lines[y][x] != '.') tiles[(y, x)] = new MirrorTile(lines[y][x], []);
             return tiles;
+        }
+
+        static Dictionary<(int y, int x), MirrorTile> DeepCopy(Dictionary<(int y, int x), MirrorTile> tiles)
+        {
+            var copy = new Dictionary<(int y, int x), MirrorTile>();
+            foreach (var (key, value) in tiles)
+                copy[key] = new (value.Mirror, [..value.Beams]);
+            return copy;
         }
     }
 
