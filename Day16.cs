@@ -9,7 +9,7 @@
 
         void ComputeExample()
         {
-            var input = 
+            var input =
                 """
                 .|...\....
                 |.-.\.....
@@ -33,12 +33,15 @@
             Part2(input).Should().Be(8185);
         }
 
-        int Part1(string[] lines) => CountEnergized(TraverseTiles(ParseMirrors(lines), lines.Length, lines[0].Length));
-        int Part2(string[] lines) => CountMaxEnergized(ParseMirrors(lines), lines.Length, lines[0].Length);
+        int Part1(string[] lines) => CountEnergized(TraverseTiles(ParseMirrors(lines)));
+        int Part2(string[] lines) => CountMaxEnergized(ParseMirrors(lines));
 
-        static int CountMaxEnergized(Dictionary<(int y, int x), char> mirrors, int maxY, int maxX)
+        static int CountMaxEnergized(char[][] mirrors)
         {
+            var maxY = mirrors.Length;
+            var maxX = mirrors[0].Length;
             var max = 0;
+
             for (var x = 0; x < maxX; x++)
             {
                 FindMaxEnergized(0, x, Direction.S);
@@ -51,15 +54,23 @@
             }
             return max;
 
-            void FindMaxEnergized(int y, int x, Direction direction) 
-                => max = Math.Max(max, CountEnergized(TraverseTiles(mirrors, maxY, maxX, y, x, direction)));
+            void FindMaxEnergized(int y, int x, Direction direction)
+                => max = Math.Max(max, CountEnergized(TraverseTiles(mirrors, y, x, direction)));
         }
 
-        static Dictionary<(int y, int x), List<Direction>> TraverseTiles(Dictionary<(int y, int x), char> mirrors, 
-            int maxY, int maxX,
+        static List<Direction>[][] TraverseTiles(char[][] mirrors,
             int startY = 0, int startX = 0, Direction startDirection = Direction.E)
         {
-            var tiles = new Dictionary<(int y, int x), List<Direction>>();
+            var maxY = mirrors.Length;
+            var maxX = mirrors[0].Length;
+
+            var tiles = new List<Direction>[maxY][];
+            for (var y = 0; y < maxY; y++)
+            {
+                tiles[y] = new List<Direction>[maxX];
+                for (var x = 0; x < maxX; x++) tiles[y][x] = [];
+            }
+
             var beams = new Queue<(int y, int x, Direction direction)>();
             beams.Enqueue((startY, startX, startDirection));
 
@@ -67,10 +78,7 @@
             {
                 var (y, x, direction) = beams.Dequeue();
 
-                var mirror = mirrors.GetValueOrDefault((y, x), '.');
-
-                if (!tiles.TryGetValue((y, x), out var tile))
-                    tiles[(y, x)] = tile = [];
+                var tile = tiles[y][x];
 
                 // if beam already exists, skip
                 if (tile.Contains(direction)) continue;
@@ -78,7 +86,7 @@
                 // add beam to mirror tile
                 tile.Add(direction);
 
-                switch (mirror)
+                switch (mirrors[y][x])
                 {
                     case '/':
                         direction = direction switch
@@ -142,19 +150,17 @@
 
                 if (x >= 0 && y >= 0 && x < maxX && y < maxY)
                     beams.Enqueue((y, x, direction));
-            }   
+            }
         }
 
-        static int CountEnergized(Dictionary<(int y, int x), List<Direction>> tiles) 
-            => tiles.Values.Count(t => t.Count > 0);
+        static int CountEnergized(List<Direction>[][] tiles) => tiles.Sum(r => r.Count(b => b.Count > 0));
 
-        static Dictionary<(int y, int x), char> ParseMirrors(string[] lines)
+        static char[][] ParseMirrors(string[] lines)
         {
-            var tiles = new Dictionary<(int y, int x), char>();
+            var mirrors = new char[lines.Length][];
             for (var y = 0; y < lines.Length; y++)
-                for (var x = 0; x < lines[y].Length; x++)
-                    if (lines[y][x] != '.') tiles[(y, x)] = lines[y][x];
-            return tiles;
+                mirrors[y] = lines[y].ToCharArray();
+            return mirrors;
         }
     }
 }
