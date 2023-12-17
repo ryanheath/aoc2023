@@ -51,7 +51,7 @@ static partial class Aoc2023
 
         static int Traverse(int[][] map, int minSteps, int maxSteps)
         {
-            Queue<(int y, int x, Direction direction, int directionMoves, int heat)> queue = new();
+            PriorityQueue<(int y, int x, Direction direction, int directionMoves, int heat), int> queue = new();
             Dictionary<(Direction, int), int>[][] visited = new Dictionary<(Direction, int), int>[map.Length][];
             for (var y = 0; y < map.Length; y++)
             {
@@ -60,8 +60,8 @@ static partial class Aoc2023
                     visited[y][x] = [];
             }
 
-            queue.Enqueue((0, 0, Direction.E, 0, 0));
-            queue.Enqueue((0, 0, Direction.S, 0, 0));
+            queue.Enqueue((0, 0, Direction.E, 0, 0), 0);
+            queue.Enqueue((0, 0, Direction.S, 0, 0), 0);
 
             while (queue.Count > 0)
             {
@@ -165,7 +165,7 @@ static partial class Aoc2023
                             return;
                     }
 
-                    queue.Enqueue((newY, newX, direction, newDirectionMoves, heat));
+                    queue.Enqueue((newY, newX, direction, newDirectionMoves, heat), heat);
                     vlist[(direction, newDirectionMoves)] = heat;
                 }
             }
