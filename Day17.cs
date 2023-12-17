@@ -67,59 +67,13 @@ static partial class Aoc2023
             {
                 var (y, x, direction, directionMoves, heat) = queue.Dequeue();
 
-                if (directionMoves == maxSteps)
+                if (directionMoves < maxSteps)
+                    Move(y, x, direction, heat, directionMoves);
+
+                if (directionMoves >= minSteps)
                 {
-                    switch (direction)
-                    {
-                        case Direction.N:
-                        case Direction.S:
-                            Move(y, x, Direction.E, heat, 0);
-                            Move(y, x, Direction.W, heat, 0);
-                            break;
-                        case Direction.E:
-                        case Direction.W:
-                            Move(y, x, Direction.N, heat, 0);
-                            Move(y, x, Direction.S, heat, 0);
-                            break;
-                    }
-                }
-                else
-                {
-                    switch (direction)
-                    {
-                        case Direction.N:
-                            Move(y, x, Direction.N, heat, directionMoves);
-                            if (directionMoves >= minSteps)
-                            {
-                                Move(y, x, Direction.E, heat, 0);
-                                Move(y, x, Direction.W, heat, 0);
-                            }
-                            break;
-                        case Direction.E:
-                            Move(y, x, Direction.E, heat, directionMoves);
-                            if (directionMoves >= minSteps)
-                            {
-                                Move(y, x, Direction.S, heat, 0);
-                                Move(y, x, Direction.N, heat, 0);
-                            }
-                            break;
-                        case Direction.S:
-                            Move(y, x, Direction.S, heat, directionMoves);
-                            if (directionMoves >= minSteps)
-                            {
-                                Move(y, x, Direction.W, heat, 0);
-                                Move(y, x, Direction.E, heat, 0);
-                            }
-                            break;
-                        case Direction.W:
-                            Move(y, x, Direction.W, heat, directionMoves);
-                            if (directionMoves >= minSteps)
-                            {
-                                Move(y, x, Direction.N, heat, 0);
-                                Move(y, x, Direction.S, heat, 0);
-                            }
-                            break;
-                    }
+                    Move(y, x, L90(direction), heat, 0);
+                    Move(y, x, R90(direction), heat, 0);
                 }
             }
 
@@ -169,6 +123,23 @@ static partial class Aoc2023
                     vlist[(direction, newDirectionMoves)] = heat;
                 }
             }
+
+            static Direction L90(Direction direction) => direction switch
+            {
+                Direction.N => Direction.W,
+                Direction.W => Direction.S,
+                Direction.S => Direction.E,
+                Direction.E => Direction.N,
+                _ => throw new UnreachableException()
+            };
+            static Direction R90(Direction direction) => direction switch
+            {
+                Direction.N => Direction.E,
+                Direction.E => Direction.S,
+                Direction.S => Direction.W,
+                Direction.W => Direction.N,
+                _ => throw new UnreachableException()
+            };  
         }
 
         static int[][] ParseMap(string[] lines)
