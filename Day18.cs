@@ -26,18 +26,65 @@
                 U 2 (#7a21e3)
                 """.ToLines();
             Part1(input).Should().Be(62);
-            Part2(input).Should().Be(0);
+            Part2(input).Should().Be(952408144115);
         }
 
         void Compute()
         {
             var input = File.ReadAllLines($"{day.ToLowerInvariant()}.txt");
             Part1(input).Should().Be(52055);
-            Part2(input).Should().Be(0);
+            Part2(input).Should().Be(67622758357096);
         }
 
-        int Part1(string[] lines) => Fill(Dig(ParseDigPlan(lines))).Count;
-        int Part2(string[] lines) => 0;
+        int Part1(string[] lines) => Fill(Dig(ParseDigPlan(lines, readFromColor: false))).Count;
+        long Part2(string[] lines) => Area(ParseDigPlan(lines, readFromColor: true));
+
+        static long Area((Direction dir, int len)[] instructions)
+        {
+            var pos = (y: 0L, x: 0L);
+            var points = new (long y, long x)[instructions.Length];
+            var perimeter = 0L;
+
+            for (var i = 0; i < instructions.Length; i++)
+            {
+                points[i] = pos;
+                var instruction = instructions[i];
+                var (dir, len) = instruction;
+                pos = PosFromInstruction(pos, instruction);
+                perimeter += len;
+            }
+
+            // shoelace formula
+            var area = 0L;
+            
+            for (var i = 0; i < points.Length; i++)
+            {
+                var nextI = (i + 1) % points.Length;
+                var prevI = i - 1 < 0 ? points.Length - 1 : i - 1;
+                area += points[i].y * (points[nextI].x - points[prevI].x);
+            }
+
+            area = Math.Abs(area) / 2;
+            // adjust for the perimeter being the outer edge of the area
+            area += perimeter / 2 + 1;
+
+            return area;
+
+            static (long y, long x) PosFromInstruction((long y, long x) pos, (Direction dir, int len) instruction)
+            {
+                var (dir, len) = instruction;
+                var (dy, dx) = dir switch
+                {
+                    Direction.N => (-len, 0),
+                    Direction.S => (+len, 0),
+                    Direction.W => (0, -len),
+                    Direction.E => (0, +len),
+                    _ => throw new UnreachableException()
+                };
+                    
+                return (pos.y + dy, pos.x + dx);
+            }
+        }
 
         static HashSet<(int y, int x)> Fill(HashSet<(int y, int x)> digged)
         {
@@ -87,12 +134,12 @@
             }
         }
 
-        static HashSet<(int y, int x)> Dig(IEnumerable<(Direction dir, int len, string color)> instruction)
+        static HashSet<(int y, int x)> Dig((Direction dir, int len)[] instruction)
         {
             var pos = (y: 0, x: 0);
             HashSet<(int y, int x)> digged = [pos];
             
-            foreach (var (dir, len, color) in instruction)
+            foreach (var (dir, len) in instruction)
             {
                 var (dy, dx) = dir switch
                 {
@@ -113,12 +160,15 @@
             return digged;
         }
 
-        static IEnumerable<(Direction dir, int len, string color)> ParseDigPlan(string[] lines)
+        static (Direction dir, int len)[] ParseDigPlan(string[] lines, bool readFromColor)
         {
-            foreach (var line in lines)
-                yield return ParseInstruction(line);
+            Func<string, (Direction, int)> parse = readFromColor
+                ? ParseInstructionFromColor
+                : ParseInstruction;
 
-            static (Direction dir, int len, string color) ParseInstruction(string line)
+            return [..lines.Select(parse)];
+
+            static (Direction dir, int len) ParseInstruction(string line)
             {
                 var parts = line.Split(' ');
                 var dir = parts[0][0] switch
@@ -130,8 +180,22 @@
                     _ => throw new UnreachableException()
                 };
                 var len = parts[1].ToInt();
-                var color = parts[2];
-                return (dir, len, color);
+                return (dir, len);
+            }
+
+            static (Direction dir, int len) ParseInstructionFromColor(string line)
+            {
+                var parts = line.Split(' ');
+                var dir = parts[2][7] switch
+                {
+                    '3' => Direction.N,
+                    '1' => Direction.S,
+                    '2' => Direction.W,
+                    '0' => Direction.E,
+                    _ => throw new UnreachableException()
+                };
+                var len = parts[2][2..7].ToIntFromHex();
+                return (dir, len);
             }
         }
     }
