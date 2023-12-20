@@ -75,7 +75,7 @@
 
         static void PushButton(Dictionary<string, ModuleBase> modules)
         {
-            var output = new OutputModule();
+            var bin = new BinBucketModule();
             var bus = new Queue<(string sender, string receiver, Pulse)>();
             bus.Enqueue(("button", modules["button"].Outputs[0], Pulse.Low));
 
@@ -84,7 +84,7 @@
                 var (senderName, receiverName, pulse) = bus.Dequeue();
                 var sender = modules[senderName];
                 if (!modules.TryGetValue(receiverName, out var receiver))
-                    receiver = output;
+                    receiver = bin;
 
                 var result = sender.SendPulse(receiver, pulse);
 
@@ -148,7 +148,7 @@
         abstract protected Pulse ReceivePulse(ModuleBase sender, Pulse pulse);
     }
 
-    record class OutputModule() : ModuleBase("output", [])
+    record class BinBucketModule() : ModuleBase("output", [])
     {
         override protected Pulse ReceivePulse(ModuleBase sender, Pulse pulse) => Pulse.None;
     }
