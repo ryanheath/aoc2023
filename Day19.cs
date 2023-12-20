@@ -167,11 +167,7 @@
             _ => false
         };
 
-        public (PartCombi? truePart, PartCombi? falsePart) Split(PartCombi p)
-        {
-            var (left, right) = p.Split(part, @operator, value);
-            return @operator is '<' ? (left, right) : (right, left);
-        }
+        public (PartCombi? truePart, PartCombi? falsePart) Split(PartCombi pc) => pc.Split(part, @operator, value);
     }
     record Part(int x, int m, int a, int s)
     {
@@ -183,45 +179,37 @@
 
         public (PartCombi?, PartCombi?) Split(char part, char @operator, int value) => part switch
         {
-            'x' => SplitX(@operator, value),
-            'm' => SplitM(@operator, value),
-            'a' => SplitA(@operator, value),
-            's' => SplitS(@operator, value),
+            'x' => SplitX(x.Split(@operator, value)),
+            'm' => SplitM(m.Split(@operator, value)),
+            'a' => SplitA(a.Split(@operator, value)),
+            's' => SplitS(s.Split(@operator, value)),
             _ => throw new UnreachableException()
         };
 
-        (PartCombi?, PartCombi?) SplitX(char @operator, int value)
-        {
-            var (x1, x2) = x.Split(@operator, value);
-            return (x1 is null ? null : new PartCombi(x1, m, a, s), x2 is null ? null : new PartCombi(x2, m, a, s));
-        }
-        (PartCombi?, PartCombi?) SplitM(char @operator, int value)
-        {
-            var (m1, m2) = m.Split(@operator, value);
-            return (m1 is null ? null : new PartCombi(x, m1, a, s), m2 is null ? null : new PartCombi(x, m2, a, s));
-        }
-        (PartCombi?, PartCombi?) SplitA(char @operator, int value)
-        {
-            var (a1, a2) = a.Split(@operator, value);
-            return (a1 is null ? null : new PartCombi(x, m, a1, s), a2 is null ? null : new PartCombi(x, m, a2, s));
-        }
-        (PartCombi?, PartCombi?) SplitS(char @operator, int value)
-        {
-            var (s1, s2) = s.Split(@operator, value);
-            return (s1 is null ? null : new PartCombi(x, m, a, s1), s2 is null ? null : new PartCombi(x, m, a, s2));
-        }
+        (PartCombi?, PartCombi?) SplitX((PartRange? x1, PartRange? x2) input) => (
+            input.x1 is null ? null : new PartCombi(input.x1, m, a, s),
+            input.x2 is null ? null : new PartCombi(input.x2, m, a, s));
+        (PartCombi?, PartCombi?) SplitM((PartRange? m1, PartRange? m2) input) => (
+            input.m1 is null ? null : new PartCombi(x, input.m1, a, s),
+            input.m2 is null ? null : new PartCombi(x, input.m2, a, s));
+        (PartCombi?, PartCombi?) SplitA((PartRange? a1, PartRange? a2) input) => (
+            input.a1 is null ? null : new PartCombi(x, m, input.a1, s),
+            input.a2 is null ? null : new PartCombi(x, m, input.a2, s));
+        (PartCombi?, PartCombi?) SplitS((PartRange? s1, PartRange? s2) input) => (
+            input.s1 is null ? null : new PartCombi(x, m, a, input.s1),
+            input.s2 is null ? null : new PartCombi(x, m, a, input.s2));
     }
     record PartRange(int start, int end)
     {
         public ulong Count => (ulong)end - (ulong)start + 1;
 
-        public (PartRange?, PartRange?) Split(char @operator, int value)
+        public (PartRange? truePart, PartRange? falsePart) Split(char @operator, int value)
         {   
             if (value < start) return (null, this);
             if (value > end) return (this, null);
             return @operator is '<'
                 ? (new PartRange(start, value - 1), new PartRange(value, end))
-                : (new PartRange(start, value), new PartRange(value + 1, end));
+                : (new PartRange(value + 1, end), new PartRange(start, value));
         }
     }
 }
