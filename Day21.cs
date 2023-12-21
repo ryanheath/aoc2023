@@ -49,7 +49,7 @@
             var writeQueue = new Queue<(int y, int x, int s)>();
             var mapHeight = map.Length;
             var mapWidth = map[0].Length;
-            var hasSeen = new HashSet<(int y, int x)>();
+            var hasSeen = new HashSet<(int y, int x)>(Eq.Instance);
 
             readQueue.Enqueue((start.y, start.x, 0));
 
@@ -73,16 +73,15 @@
                 }
             }
 
-            return readQueue.Select(p => (p.y, p.x)).ToHashSet();
+            return readQueue.Select(p => (p.y, p.x)).ToHashSet(Eq.Instance);
 
             void Enqueue(int y, int x, int s)
             {
                 if (!IsOpen(y, x)) return;
                 var p = (y, x, s);
                 var ps = (y, x);
-                if (!hasSeen.Contains(ps))
+                if (hasSeen.Add(ps))
                 {
-                    hasSeen.Add(ps);
                     writeQueue.Enqueue(p);
                 }
             }
@@ -118,7 +117,7 @@
 
             var positions = Positions(simSteps, infinite: true, input);
             var simMap = CompressedMap(simSteps, mapSize, positions);
-            // DrawCompressedMap(simSteps, simMap);
+            DrawCompressedMap(simMap);
 
             // if (steps < 1000)
             // {
@@ -201,8 +200,8 @@
                 // => 42 * (4 + (3 * (3 + 1) / 2) * 2) + 39 * (3 + (2 * (2 + 1) / 2) * 2)
                 // => 42 * (4 + 3 * 4) + 39 * (3 + 2 * 3)
                 // => 42 * 4*4 + 39 * 3*3
-                long highCount = (cGrid + 1) * (cGrid + 1);
-                long lowCount = cGrid * cGrid;
+                var highCount = (cGrid + 1) * (cGrid + 1);
+                var lowCount = cGrid * cGrid;
 
                 return highCount * highValue + lowCount * lowValue;
             }
@@ -249,7 +248,7 @@
                 return compressedMap;
             }
 
-            static void DrawCompressedMap(int steps, int[][] cMap)
+            static void DrawCompressedMap(int[][] cMap)
             {
                 var dGrid = cMap.Length / 2;
 
@@ -327,5 +326,13 @@
             }
             return (map, start);
         }
+    }
+    
+    class Eq : IEqualityComparer<(int y, int x)>
+    {
+        public bool Equals((int y, int x) a, (int y, int x) b) => a.y == b.y && a.x == b.x;
+        public int GetHashCode((int y, int x) obj) => obj.y * 1000000 + obj.x;
+        
+        public static Eq Instance { get; } = new();
     }
 }
