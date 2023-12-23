@@ -42,14 +42,14 @@
         long Part1(string[] lines, int steps) => Positions(steps, infinite: false, ParseMap(lines)).Count;
         long Part2(string[] lines, int steps) => CountPositions(steps, ParseMap(lines));
 
-        static HashSet<(int y, int x)> Positions(int steps, bool infinite, (char[][], (int y, int x)) input)
+        static PointsHashSet Positions(int steps, bool infinite, (char[][], (int y, int x)) input)
         {
             var (map, start) = input;
             var readQueue = new Queue<(int y, int x, int s)>();
             var writeQueue = new Queue<(int y, int x, int s)>();
             var mapHeight = map.Length;
             var mapWidth = map[0].Length;
-            var hasSeen = new HashSet<(int y, int x)>(Eq.Instance);
+            var hasSeen = new PointsHashSet(mapWidth);
 
             readQueue.Enqueue((start.y, start.x, 0));
 
@@ -73,7 +73,7 @@
                 }
             }
 
-            return readQueue.Select(p => (p.y, p.x)).ToHashSet(Eq.Instance);
+            return new PointsHashSet(mapWidth, readQueue.Select(p => (p.y, p.x)));
 
             void Enqueue(int y, int x, int s)
             {
@@ -224,7 +224,7 @@
                 return count;
             }
 
-            static int[][] CompressedMap(int steps, int mapSize, HashSet<(int y, int x)> positions)
+            static int[][] CompressedMap(int steps, int mapSize, PointsHashSet positions)
             {
                 var dGrid = steps / mapSize + 1;
                 var cSize = dGrid * 2 + 1;
@@ -250,6 +250,7 @@
 
             static void DrawCompressedMap(int[][] cMap)
             {
+                return;
                 var dGrid = cMap.Length / 2;
 
                 Console.WriteLine($"dGrid = {dGrid}");
@@ -334,5 +335,38 @@
         public int GetHashCode((int y, int x) obj) => obj.y * 1000000 + obj.x;
         
         public static Eq Instance { get; } = new();
+    }
+
+    /// specialized hashset for points, to speed up the search
+    class PointsHashSet(int gridSize)
+    {
+        readonly Dictionary<int, HashSet<int>> hashSets = [];
+
+        public PointsHashSet(int gridSize, IEnumerable<(int, int)> enumerable) : this(gridSize)
+        {
+            foreach (var item in enumerable) Add(item);
+        }
+
+        public int Count => hashSets.Values.Sum(hs => hs.Count);
+
+        public bool Add((int y, int x) p) => GetHashSetFor(p).Add(Point(p.y, p.x));
+
+        public void Clear() { foreach (var hashSet in hashSets.Values) hashSet.Clear(); }
+
+        public bool Contains((int y, int x) p) => GetHashSetFor(p).Contains(Point(p.y, p.x));
+
+        private HashSet<int> GetHashSetFor((int y, int x) p)
+        {
+            var key = GridKey(p.y, p.x);
+            if (!hashSets.TryGetValue(key, out var hashSet)) 
+            {
+                hashSet = new HashSet<int>(gridSize * gridSize);
+                hashSets.Add(key, hashSet);
+            }
+            return hashSet;
+        }
+
+        int GridKey(int y, int x) => (y / gridSize) * 100000 + (x / gridSize);
+        static int Point(int y, int x) => y * 100000 + x;
     }
 }
