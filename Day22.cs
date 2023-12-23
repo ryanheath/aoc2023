@@ -38,20 +38,20 @@
 
             int ChainReaction(Brick brick)
             {
-                HashSet<Brick> fallen = [brick];
+                HashSet<Brick> fallen = [];
                 var work = new Queue<Brick>();
                 work.Enqueue(brick);
 
                 while (work.Count > 0)
                 {
                     var b = work.Dequeue();
+                    fallen.Add(b);
 
                     foreach (var s in b.Supports)
                     {
                         // skip when still supported by other bricks that stay in place
                         if (s.SupportedBy.Except(fallen).Any()) continue;
                         work.Enqueue(s);
-                        fallen.Add(s);
                     }
                 }
 
