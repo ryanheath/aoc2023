@@ -19,32 +19,60 @@
                 1,1,8~1,1,9
                 """.ToLines();
             Part1(input).Should().Be(5);
-            Part2(input).Should().Be(0);
+            Part2(input).Should().Be(7);
         }
 
         void Compute()
         {
             var input = File.ReadAllLines($"{day.ToLowerInvariant()}.txt");
             Part1(input).Should().Be(424);
-            Part2(input).Should().Be(0);
+            Part2(input).Should().Be(55483);
         }
 
         int Part1(string[] lines) => CountDisintegratables(Fall(ParseBricks(lines)));
-        int Part2(string[] lines) => 0;
+        int Part2(string[] lines) => CountChainReaction(Fall(ParseBricks(lines)));
 
-        static int CountDisintegratables(Brick[] bricks)
+        static int CountChainReaction(Brick[] bricks)
         {
-            return bricks.Count(IsDisintegratable);
+            Dictionary<Brick, HashSet<Brick>> cache = [];
 
-            bool IsDisintegratable(Brick brick)
+            return bricks.Reverse().Where(b => !IsDisintegratable(bricks, b)).Sum(b => ChainReaction(b, []).Count);
+
+            HashSet<Brick> ChainReaction(Brick brick, HashSet<Brick> deleteds)
             {
+                if (cache.TryGetValue(brick, out var set)) return set;
+
+                set = [];
+
                 // find supported bricks with Z1 == brick.Z2 + 1
-                var supporteds = bricks.Where(b => b.Z1 == brick.Z2 + 1 && b.IsSupportedBy(brick));
-                // find other bricks at same Z2 level
-                var siblings = bricks.Where(b => b.Z2 == brick.Z2 && b != brick);
-                // all supported bricks must be supported by at least one sibling
-                return supporteds.All(s => siblings.Any(s.IsSupportedBy));
+                var supported = bricks.Where(b => b.Z1 == brick.Z2 + 1 && b.IsSupportedBy(brick));
+                // find other bricks (that are not deleted and) at same Z2 level
+                var siblings = bricks.Where(b => b.Z2 == brick.Z2 && b != brick && !deleteds.Contains(b));
+                // orphans are bricks that are not supported by any other sibling
+                var orphans = supported.Where(s => !siblings.Any(s.IsSupportedBy));
+                
+                set.UnionWith(orphans);
+                deleteds.UnionWith(orphans);
+
+                foreach (var s in orphans)
+                    set.UnionWith(ChainReaction(s, deleteds));
+
+                // cache is not correct ...  cache[brick] = set;
+
+                return set;
             }
+        }
+
+        static int CountDisintegratables(Brick[] bricks) => bricks.Count(b => IsDisintegratable(bricks, b));
+
+        static bool IsDisintegratable(Brick[] bricks, Brick brick)
+        {
+            // find supported bricks with Z1 == brick.Z2 + 1
+            var supporteds = bricks.Where(b => b.Z1 == brick.Z2 + 1 && b.IsSupportedBy(brick));
+            // find other bricks at same Z2 level
+            var siblings = bricks.Where(b => b.Z2 == brick.Z2 && b != brick);
+            // all supported bricks must be supported by at least one sibling
+            return supporteds.All(s => siblings.Any(s.IsSupportedBy));
         }
 
         static Brick[] Fall(Brick[] bricks)
