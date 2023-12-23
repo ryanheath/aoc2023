@@ -34,22 +34,16 @@
 
         static int CountChainReaction(Brick[] bricks)
         {
-            Dictionary<Brick, HashSet<Brick>> cache = [];
-
-            return bricks.Reverse().Where(b => !IsDisintegratable(bricks, b)).Sum(b => ChainReaction(b, []).Count);
+            return bricks.Reverse().Where(IsNotDisintegratable).Sum(b => ChainReaction(b, []).Count);
 
             HashSet<Brick> ChainReaction(Brick brick, HashSet<Brick> deleteds)
             {
-                if (cache.TryGetValue(brick, out var set)) return set;
+                HashSet<Brick> set = [];
 
-                set = [];
-
-                // find supported bricks with Z1 == brick.Z2 + 1
-                var supported = bricks.Where(b => b.Z1 == brick.Z2 + 1 && b.IsSupportedBy(brick));
                 // find other bricks (that are not deleted and) at same Z2 level
-                var siblings = bricks.Where(b => b.Z2 == brick.Z2 && b != brick && !deleteds.Contains(b));
+                HashSet<Brick> siblings = [..brick.Siblings.Except(deleteds)];
                 // orphans are bricks that are not supported by any other sibling
-                Brick[] orphans = [..supported.Where(s => !siblings.Any(s.IsSupportedBy))];
+                Brick[] orphans = [..brick.Supports.Where(o => !siblings.Any(s => s.Supports.Contains(o)))];
                 
                 set.UnionWith(orphans);
                 deleteds.UnionWith(orphans);
@@ -57,23 +51,15 @@
                 foreach (var s in orphans)
                     set.UnionWith(ChainReaction(s, deleteds));
 
-                // cache is not correct ...  cache[brick] = set;
-
                 return set;
             }
         }
 
-        static int CountDisintegratables(Brick[] bricks) => bricks.Count(b => IsDisintegratable(bricks, b));
+        static int CountDisintegratables(Brick[] bricks) => bricks.Count(IsDisintegratable);
 
-        static bool IsDisintegratable(Brick[] bricks, Brick brick)
-        {
-            // find supported bricks with Z1 == brick.Z2 + 1
-            var supporteds = bricks.Where(b => b.Z1 == brick.Z2 + 1 && b.IsSupportedBy(brick));
-            // find other bricks at same Z2 level
-            var siblings = bricks.Where(b => b.Z2 == brick.Z2 && b != brick);
-            // all supported bricks must be supported by at least one sibling
-            return supporteds.All(s => siblings.Any(s.IsSupportedBy));
-        }
+        // all supported bricks must be supported by at least one other sibling
+        static bool IsDisintegratable(Brick brick) => brick.Supports.All(s => s.SupportedBy.Any(x => x != brick));
+        static bool IsNotDisintegratable(Brick brick) => !IsDisintegratable(brick);
 
         static Brick[] Fall(Brick[] bricks)
         {
@@ -98,12 +84,36 @@
                     if (bricks[..fallen].Any(brick.Intersects))
                     {
                         brick.MoveZTo(brick.Z1 + 1);
+
+                        foreach (var b in bricks[..fallen])
+                        {
+                            if (brick.IsSupportedBy(b))
+                            {
+                                brick.SupportedBy.Add(b);
+                                b.Supports.Add(brick);
+                            }
+                        }
+
                         break;
                     }
                 }
 
                 fallen++;
             }
+
+            // set siblings
+            for (var i = 0; i < bricks.Length - 1; i++)
+                for (var j = i + 1; j < bricks.Length - 1; j++)
+                {
+                    var b = bricks[j];
+                    var brick = bricks[i];
+
+                    if (b.Z2 == brick.Z2)
+                    {
+                        brick.Siblings.Add(b);
+                        b.Siblings.Add(brick);
+                    }
+                }
 
             return bricks;
         }
@@ -126,6 +136,10 @@
         public int X2 { get; private set; } = Math.Max(p1[0], p2[0]);
         public int Y2 { get; private set; } = Math.Max(p1[1], p2[1]);
         public int Z2 { get; private set; } = Math.Max(p1[2], p2[2]);
+
+        public HashSet<Brick> Supports { get; } = [];
+        public HashSet<Brick> SupportedBy { get; } = [];
+        public HashSet<Brick> Siblings { get; } = [];
 
         public void MoveZTo(int z)
         {
