@@ -34,24 +34,28 @@
 
         static int CountChainReaction(Brick[] bricks)
         {
-            return bricks.Reverse().Where(IsNotDisintegratable).Sum(b => ChainReaction(b, []).Count);
+            return bricks.Where(IsNotDisintegratable).Sum(ChainReaction);
 
-            HashSet<Brick> ChainReaction(Brick brick, HashSet<Brick> deleteds)
+            int ChainReaction(Brick brick)
             {
-                HashSet<Brick> set = [];
+                HashSet<Brick> fallen = [brick];
+                var work = new Queue<Brick>();
+                work.Enqueue(brick);
 
-                // find other bricks (that are not deleted and) at same Z2 level
-                HashSet<Brick> siblings = [..brick.Siblings.Except(deleteds)];
-                // orphans are bricks that are not supported by any other sibling
-                Brick[] orphans = [..brick.Supports.Where(o => !siblings.Any(s => s.Supports.Contains(o)))];
-                
-                set.UnionWith(orphans);
-                deleteds.UnionWith(orphans);
+                while (work.Count > 0)
+                {
+                    var b = work.Dequeue();
 
-                foreach (var s in orphans)
-                    set.UnionWith(ChainReaction(s, deleteds));
+                    foreach (var s in b.Supports)
+                    {
+                        // skip when still supported by other bricks that stay in place
+                        if (s.SupportedBy.Except(fallen).Any()) continue;
+                        work.Enqueue(s);
+                        fallen.Add(s);
+                    }
+                }
 
-                return set;
+                return fallen.Count - 1;
             }
         }
 
