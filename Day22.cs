@@ -49,7 +49,7 @@
                 // find other bricks (that are not deleted and) at same Z2 level
                 var siblings = bricks.Where(b => b.Z2 == brick.Z2 && b != brick && !deleteds.Contains(b));
                 // orphans are bricks that are not supported by any other sibling
-                var orphans = supported.Where(s => !siblings.Any(s.IsSupportedBy));
+                Brick[] orphans = [..supported.Where(s => !siblings.Any(s.IsSupportedBy))];
                 
                 set.UnionWith(orphans);
                 deleteds.UnionWith(orphans);
@@ -82,20 +82,20 @@
             bricks[0].MoveZTo(1);
             var fallen = 1;
 
-            for (int j = 1; j < bricks.Length; j++)
+            for (var j = 1; j < bricks.Length; j++)
             {
                 var brick = bricks[j];
 
                 // find highest Z2 of bricks that have fallen
                 // too speed up the fall of the current brick
-                var startZ = bricks[0..fallen].Max(b => b.Z2);
+                var startZ = bricks[..fallen].Max(b => b.Z2);
                 brick.MoveZTo(startZ + 1);
 
                 while(brick.Z1 > 1)
                 {
                     brick.MoveZTo(brick.Z1 - 1);
                     // fall until brick is supported by another brick
-                    if (bricks[0..fallen].Any(brick.Intersects))
+                    if (bricks[..fallen].Any(brick.Intersects))
                     {
                         brick.MoveZTo(brick.Z1 + 1);
                         break;
@@ -118,7 +118,7 @@
         }
     }
 
-    record class Brick(int[] p1, int[] p2)
+    class Brick(int[] p1, int[] p2)
     {
         public int X1 { get; private set; } = Math.Min(p1[0], p2[0]);
         public int Y1 { get; private set; } = Math.Min(p1[1], p2[1]);
@@ -142,6 +142,6 @@
         public bool IsSupportedBy(Brick brick) =>
             X1 <= brick.X2 && X2 >= brick.X1 &&
             Y1 <= brick.Y2 && Y2 >= brick.Y1 &&
-            (Z1-1) <= brick.Z2 && (Z2-1) >= brick.Z1;
+            Z1-1 <= brick.Z2 && Z2-1 >= brick.Z1;
     }
 }

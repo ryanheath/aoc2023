@@ -52,8 +52,8 @@
                 PushButton(modules);
 
                 foreach (var conjunction in inputsForTrackOutput2.OfType<ConjunctionModule>())
-                    if (conjunction.PulseHighCount == 1 && !counts.ContainsKey(conjunction.Name))
-                        counts[conjunction.Name] = times;
+                    if (conjunction.PulseHighCount == 1)
+                        counts.TryAdd(conjunction.Name, times);
 
                 if (counts.Count == inputsForTrackOutput2.Length)
                     break;
@@ -83,8 +83,7 @@
             {
                 var (senderName, receiverName, pulse) = bus.Dequeue();
                 var sender = modules[senderName];
-                if (!modules.TryGetValue(receiverName, out var receiver))
-                    receiver = bin;
+                var receiver = modules.GetValueOrDefault(receiverName, bin);
 
                 var result = sender.SendPulse(receiver, pulse);
 
@@ -97,9 +96,10 @@
 
         static Dictionary<string, ModuleBase> ParseModules(string[] lines)
         {
-            var modules = new Dictionary<string, ModuleBase>(lines.Select(ParseModule));
-
-            modules["button"] = new ButtonModule();
+            var modules = new Dictionary<string, ModuleBase>(lines.Select(ParseModule))
+            {
+                ["button"] = new ButtonModule()
+            };
 
             // register inputs for conjunction modules
             foreach (var module in modules.Values.OfType<ConjunctionModule>())
@@ -117,23 +117,18 @@
                 {
                     return new(name, new BroadcasterModule(outputs));
                 }
-                else if (name[0] == '%')
+
+                return name[0] switch
                 {
-                    return new(name[1..], new FlipFlopModule(name[1..], outputs));
-                }
-                else if (name[0] == '&')
-                {
-                    return new(name[1..], new ConjunctionModule(name[1..], outputs));
-                }
-                else
-                {
-                    throw new UnreachableException();
-                }
+                    '%' => new(name[1..], new FlipFlopModule(name[1..], outputs)),
+                    '&' => new(name[1..], new ConjunctionModule(name[1..], outputs)),
+                    _ => throw new UnreachableException()
+                };
             }
         }
     }
 
-    abstract record class ModuleBase(string Name, string[] Outputs)
+    abstract record ModuleBase(string Name, string[] Outputs)
     {
         public int PulseHighCount { get; private set; }
         public int PulseLowCount { get; private set; }
@@ -148,21 +143,21 @@
         abstract protected Pulse ReceivePulse(ModuleBase sender, Pulse pulse);
     }
 
-    record class BitBucketModule() : ModuleBase("output", [])
+    record BitBucketModule() : ModuleBase("output", [])
     {
         override protected Pulse ReceivePulse(ModuleBase sender, Pulse pulse) => Pulse.None;
     }
 
-    abstract record class PassthroughModule(string Name, string[] Outputs) : ModuleBase(Name, Outputs)
+    abstract record PassthroughModule(string Name, string[] Outputs) : ModuleBase(Name, Outputs)
     {
         override protected Pulse ReceivePulse(ModuleBase sender, Pulse pulse) => pulse;
     }
-    record class ButtonModule() : PassthroughModule("button", ["broadcaster"]);
-    record class BroadcasterModule(string[] Outputs) : PassthroughModule("broadcaster", Outputs);
+    record ButtonModule() : PassthroughModule("button", ["broadcaster"]);
+    record BroadcasterModule(string[] Outputs) : PassthroughModule("broadcaster", Outputs);
 
-    record class FlipFlopModule(string Name, string[] Outputs) : ModuleBase(Name, Outputs)
+    record FlipFlopModule(string Name, string[] Outputs) : ModuleBase(Name, Outputs)
     {
-        private bool on = false;
+        private bool on;
 
         override protected Pulse ReceivePulse(ModuleBase _, Pulse pulse)
         {
@@ -176,11 +171,11 @@
         }
     }
 
-    record class ConjunctionModule(string Name, string[] Outputs) : ModuleBase(Name, Outputs)
+    record ConjunctionModule(string Name, string[] Outputs) : ModuleBase(Name, Outputs)
     {
         private Dictionary<string, Pulse> memory = new();
 
-        public void RegisterInputs(string[] inputs) => memory = inputs.ToDictionary(x => x, x => Pulse.Low);
+        public void RegisterInputs(string[] inputs) => memory = inputs.ToDictionary(x => x, _ => Pulse.Low);
 
         override protected Pulse ReceivePulse(ModuleBase sender, Pulse pulse)
         {

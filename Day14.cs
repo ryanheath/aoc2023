@@ -48,17 +48,15 @@
                 DoCycle();
 
                 var key = Hash(platform);
-                if (seen.TryGetValue(key, out int cycleStart))
+                if (seen.TryGetValue(key, out var cycleStart))
                 {
                     var cycleLength = cycle - cycleStart;
                     var remainingCycles = (totalCycles - cycleStart) % cycleLength;
                     for (var i = 0; i < remainingCycles; i++) DoCycle();
                     return platform;
                 }
-                else
-                {
-                    seen.Add(key, cycle);
-                }
+
+                seen.Add(key, cycle);
             }
 
             return platform;

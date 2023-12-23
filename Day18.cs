@@ -49,7 +49,7 @@
             {
                 points[i] = pos;
                 var instruction = instructions[i];
-                var (dir, len) = instruction;
+                var (_, len) = instruction;
                 pos = PosFromInstruction(pos, instruction);
                 perimeter += len;
             }
@@ -108,7 +108,7 @@
 
             bool Fill((int y, int x) pos, out HashSet<(int y, int x)> filled)
             {
-                filled = new HashSet<(int y, int x)>(digged);
+                filled = [..digged];
 
                 var queue = new Queue<(int y, int x)>();
                 queue.Enqueue(pos);

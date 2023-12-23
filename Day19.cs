@@ -138,18 +138,17 @@
 
         public IEnumerable<(string, PartCombi)> NextRules(PartCombi part)
         {
-            PartCombi? nextCombi = part;
+            var nextCombi = part;
             foreach (var rule in rules)
             {
-                var (truePart, falsePart) = rule.Split(nextCombi!);
+                var (truePart, falsePart) = rule.Split(nextCombi);
                 if (truePart is not null)
                     yield return (rule.nextRule, truePart);
                 nextCombi = falsePart;
                 if (nextCombi is null)
                     yield break;
             }
-            if (nextCombi is not null)
-                yield return (lastRule, nextCombi);
+            yield return (lastRule, nextCombi);
         }
     }
     record Rule(char part, char @operator, int value, string nextRule)
@@ -187,17 +186,17 @@
         };
 
         (PartCombi?, PartCombi?) SplitX((PartRange? x1, PartRange? x2) input) => (
-            input.x1 is null ? null : new PartCombi(input.x1, m, a, s),
-            input.x2 is null ? null : new PartCombi(input.x2, m, a, s));
+            input.x1 is null ? null : this with { x = input.x1 },
+            input.x2 is null ? null : this with { x = input.x2 });
         (PartCombi?, PartCombi?) SplitM((PartRange? m1, PartRange? m2) input) => (
-            input.m1 is null ? null : new PartCombi(x, input.m1, a, s),
-            input.m2 is null ? null : new PartCombi(x, input.m2, a, s));
+            input.m1 is null ? null : this with { m = input.m1 },
+            input.m2 is null ? null : this with { m = input.m2 });
         (PartCombi?, PartCombi?) SplitA((PartRange? a1, PartRange? a2) input) => (
-            input.a1 is null ? null : new PartCombi(x, m, input.a1, s),
-            input.a2 is null ? null : new PartCombi(x, m, input.a2, s));
+            input.a1 is null ? null : this with { a = input.a1 },
+            input.a2 is null ? null : this with { a = input.a2 });
         (PartCombi?, PartCombi?) SplitS((PartRange? s1, PartRange? s2) input) => (
-            input.s1 is null ? null : new PartCombi(x, m, a, input.s1),
-            input.s2 is null ? null : new PartCombi(x, m, a, input.s2));
+            input.s1 is null ? null : this with { s = input.s1 },
+            input.s2 is null ? null : this with { s = input.s2 });
     }
     record PartRange(int start, int end)
     {

@@ -32,7 +32,7 @@
         static int HASHMAP(IEnumerable<(string label, bool add, int? focalLength)> steps)
         {
             var boxes = new List<(string label, int focalLength)>[256];
-            for (int i = 0; i < 256; i++) boxes[i] = [];
+            for (var i = 0; i < 256; i++) boxes[i] = [];
 
             foreach (var (label, add, focalLength) in steps)
             {

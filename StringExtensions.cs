@@ -9,7 +9,7 @@ static class StringExtensions
             if (line == "")
             {
                 yield return group;
-                group = new List<string>();
+                group = [];
             }
             else
             {

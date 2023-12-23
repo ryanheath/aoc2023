@@ -239,7 +239,7 @@
                         var inMapCount = 0;
                         for (var y = 0; y < mapSize; y++)
                             for (var x = 0; x < mapSize; x++)
-                                if (positions.Contains((y+(i*mapSize), x+(j*mapSize))))
+                                if (positions.Contains((y+i*mapSize, x+j*mapSize)))
                                     inMapCount++;
 
                         compressedMap[i+dGrid][j+dGrid] = inMapCount;
@@ -329,14 +329,6 @@
         }
     }
     
-    class Eq : IEqualityComparer<(int y, int x)>
-    {
-        public bool Equals((int y, int x) a, (int y, int x) b) => a.y == b.y && a.x == b.x;
-        public int GetHashCode((int y, int x) obj) => obj.y * 1000000 + obj.x;
-        
-        public static Eq Instance { get; } = new();
-    }
-
     /// specialized hashset for points, to speed up the search
     class PointsHashSet(int gridSize)
     {
@@ -366,7 +358,7 @@
             return hashSet;
         }
 
-        int GridKey(int y, int x) => (y / gridSize) * 100000 + (x / gridSize);
+        int GridKey(int y, int x) => y / gridSize * 100000 + x / gridSize;
         static int Point(int y, int x) => y * 100000 + x;
     }
 }

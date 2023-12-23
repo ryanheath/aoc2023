@@ -62,7 +62,7 @@
     {
         public override int Compare((string hand, (char card, int count)[] type) x, (string hand, (char card, int count)[] type) y)
         {
-            var countDifference = Comparer<int>.Default.Compare(x!.type[0].count, y!.type[0].count);
+            var countDifference = Comparer<int>.Default.Compare(x.type[0].count, y.type[0].count);
             return countDifference != 0
                 ? countDifference
                 : x.type.Length == y.type.Length

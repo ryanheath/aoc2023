@@ -50,7 +50,7 @@
         static int Traverse(int[][] map, int minSteps, int maxSteps)
         {
             PriorityQueue<(int y, int x, Direction direction, int directionMoves), int> queue = new();
-            Dictionary<(Direction, int), int>[][] visited = new Dictionary<(Direction, int), int>[map.Length][];
+            var visited = new Dictionary<(Direction, int), int>[map.Length][];
             for (var y = 0; y < map.Length; y++)
             {
                 visited[y] = new Dictionary<(Direction, int), int>[map[0].Length];

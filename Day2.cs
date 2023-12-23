@@ -73,7 +73,7 @@ static partial class Aoc2023
 
             static Game ParseGame(string line)
             {
-                var gameSplit = line.IndexOf(": ");
+                var gameSplit = line.IndexOf(": ", StringComparison.Ordinal);
                 var id = line[5..gameSplit].ToInt();
                 var rounds = line[(gameSplit + 2)..].Split("; ");
 

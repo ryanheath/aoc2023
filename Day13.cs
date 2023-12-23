@@ -49,7 +49,7 @@
 
             int IsHorizontalMirror() =>
                 ScanMirror(mirror.Length, mirror[0].Length, 
-                    (int i, int i2) => Enumerable.Range(0, mirror[0].Length).Count(x => mirror[i][x] == mirror[i2][x]));
+                    (i, i2) => Enumerable.Range(0, mirror[0].Length).Count(x => mirror[i][x] == mirror[i2][x]));
 
             int IsVerticalMirror() => 
                 ScanMirror(mirror[0].Length, mirror.Length, 

@@ -136,13 +136,8 @@
             FloodFill(newMaze);
 
             // count insides
-            var count = 0;
 
-            for (var y = 0; y < newMaze.Length; y++)
-                for (var x = 0; x < newMaze[y].Length; x++)
-                    if (newMaze[y][x] is not '*' and not '+' and not ' ') count++;
-
-            return count;
+            return newMaze.Sum(t => t.Count(t1 => t1 is not '*' and not '+' and not ' '));
         }
 
         static void FloodFill(char[][] maze)
@@ -201,9 +196,9 @@
             newPos = maze[pos.y][pos.x] switch
             {
                 '|' or 'L' or 'J' when direction is Direction.N && pos.y > 0 => (pos.y - 1, pos.x),
-                '|' or '7' or 'F' when direction is Direction.S && pos.y < (h - 1) => (pos.y + 1, pos.x),
+                '|' or '7' or 'F' when direction is Direction.S && pos.y < h - 1 => (pos.y + 1, pos.x),
                 '-' or '7' or 'J' when direction is Direction.W && pos.x > 0 => (pos.y, pos.x - 1),
-                '-' or 'L' or 'F' when direction is Direction.E && pos.x < (w - 1) => (pos.y, pos.x + 1),
+                '-' or 'L' or 'F' when direction is Direction.E && pos.x < w - 1 => (pos.y, pos.x + 1),
                 _ => pos
             };
 

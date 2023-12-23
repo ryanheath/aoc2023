@@ -1,19 +1,19 @@
-﻿record struct Range(long Start, long Length)
+﻿readonly record struct Range(long Start, long Length)
 {
-    public readonly long End => Start + Length;
+    public long End => Start + Length;
 }
 
-record struct Ranges(long Destination, Range Range)
+readonly record struct Ranges(long Destination, Range Range)
 {
-    public readonly long Map(long value) =>
+    public long Map(long value) =>
         value >= Range.Start && value < Range.End
         ? Destination + (value - Range.Start)
         : value;
 
-    public readonly Range MapRange(Range range) => new(Destination + (range.Start - Range.Start), range.Length);
+    public Range MapRange(Range range) => range with { Start = Destination + (range.Start - Range.Start) };
 }
 
-record struct MapRanges(string To, Ranges[] Ranges)
+readonly record struct MapRanges(string To, Ranges[] Ranges)
 {
     public readonly long Map(long value)
     {
@@ -124,7 +124,7 @@ record struct MapRanges(string To, Ranges[] Ranges)
 class RangesComparer : Comparer<Ranges>
 {
     public override int Compare(Ranges x, Ranges y) => Comparer<long>.Default.Compare(x.Range.Start, y.Range.Start);
-    public static RangesComparer Instance { get; } = new RangesComparer();
+    public static RangesComparer Instance { get; } = new();
 }
 
 static partial class Aoc2023
@@ -194,7 +194,7 @@ static partial class Aoc2023
 
             void MoveToNextCategory(MapRanges map)
             {
-                for (int i = 0; i < seeds.Length; i++)
+                for (var i = 0; i < seeds.Length; i++)
                 {
                     seeds[i] = map.Map(seeds[i]);
                 }
@@ -206,20 +206,19 @@ static partial class Aoc2023
         long Part2(string[] lines)
         {
             var seedRanges = ParseSeedRanges();
-            var maps = ParseMaps(lines);
 
             TraverseMaps(lines, MoveToNextCategory);
 
             return seedRanges.Min(x => x.Start);
 
             void MoveToNextCategory(MapRanges map) =>
-                seedRanges = seedRanges.SelectMany(x => map.MapRange(x)).ToList();
+                seedRanges = seedRanges.SelectMany(map.MapRange).ToList();
 
             List<Range> ParseSeedRanges()
             {
                 var n = lines[0].Split(": ")[1].ToLongs(" ");
                 List<Range> ranges = [];
-                for (int i = 0; i < n.Length; i += 2)
+                for (var i = 0; i < n.Length; i += 2)
                 {
                     ranges.Add(new Range(n[i], n[i+1]));
                 }
